@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>&lt;dino-loader&gt; — preview</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    body { margin: 0; padding: 2rem; color: #1a1a1a; background: #fafafa; }
+    h1 { font-size: 1.2rem; font-weight: 700; }
+    p.lead { color: #555; max-width: 60ch; }
+    .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); margin-top: 1.5rem; }
+    .card { border: 1px solid #e3e3e3; border-radius: 12px; padding: 1.25rem; background: #fff; }
+    .card h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #888; margin: 0 0 .9rem; }
+    .stage { display: flex; align-items: center; justify-content: center; min-height: 90px; border-radius: 8px; }
+    code { background: #f0f0f0; padding: .1em .35em; border-radius: 4px; font-size: .85em; }
+
+    /* Démo "s'adapte au CSS" : currentColor hérité de la carte */
+    .theme-dark  { background: #0f172a; color: #e2e8f0; }
+    .theme-brand { background: #FFFAEB; color: #000; }           /* charte Huge */
+    .theme-accent { color: #FFD869; background: #1b1b1b; }        /* jaune charte */
+    .theme-genius { color: #1f6feb; background: #f3f8ff; }        /* bleu Genius */
+    .big { color: #16a34a; }
+    .inline-demo { color: #b91c1c; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>&lt;dino-loader&gt;</h1>
+  <p class="lead">
+    Web Component d'attente. <strong>Non jouable</strong> : le dino court et saute par-dessus
+    les cactus à l'infini. Il prend la <code>color</code> et la taille de son contexte
+    (<code>currentColor</code> + <code>height</code>). Activer « Reduce motion » dans les
+    devtools fige la scène.
+  </p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Défaut (hérite color/texte)</h2>
+      <div class="stage"><dino-loader label="Chargement…"></dino-loader></div>
+    </div>
+
+    <div class="card">
+      <h2>Fond foncé (currentColor)</h2>
+      <div class="stage theme-dark"><dino-loader height="56" label="Patientez…"></dino-loader></div>
+    </div>
+
+    <div class="card">
+      <h2>Charte Huge (jaune)</h2>
+      <div class="stage theme-accent"><dino-loader height="60"></dino-loader></div>
+    </div>
+
+    <div class="card">
+      <h2>Couleur Genius</h2>
+      <div class="stage theme-genius"><dino-loader height="52" label="Synchronisation"></dino-loader></div>
+    </div>
+
+    <div class="card">
+      <h2>color="#FFD869" explicite</h2>
+      <div class="stage theme-brand"><dino-loader height="56" color="#FFD869"></dino-loader></div>
+    </div>
+
+    <div class="card">
+      <h2>Petit (24px)</h2>
+      <div class="stage"><dino-loader height="24"></dino-loader></div>
+    </div>
+
+    <div class="card">
+      <h2>Grand (110px)</h2>
+      <div class="stage"><dino-loader height="110" class="big" label="Presque prêt"></dino-loader></div>
+    </div>
+
+    <div class="card">
+      <h2>Rapide (speed=2)</h2>
+      <div class="stage"><dino-loader height="56" speed="2"></dino-loader></div>
+    </div>
+
+    <div class="card">
+      <h2>Lent (speed=0.5)</h2>
+      <div class="stage"><dino-loader height="56" speed="0.5"></dino-loader></div>
+    </div>
+
+    <div class="card">
+      <h2>En ligne dans du texte</h2>
+      <div class="stage">
+        <span class="inline-demo">Chargement <dino-loader height="20"></dino-loader> en cours</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./dino-loader.js"></script>
+</body>
+</html>
