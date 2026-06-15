@@ -6,7 +6,7 @@
  * typées qui se mappent sur les attributs.
  *
  *   import { DinoLoader } from './dino-loader.react';
- *   <DinoLoader height={48} label="Chargement…" color="var(--accent)" />
+ *   <DinoLoader height={100} label="Chargement…" />
  */
 import * as React from 'react';
 import './dino-loader.js';
@@ -19,9 +19,10 @@ declare global {
       'dino-loader': React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement> & {
           height?: number | string;
-          color?: string;
+          width?: number | string;
           speed?: number | string;
           label?: string;
+          dark?: boolean | string;
         },
         HTMLElement
       >;
@@ -30,25 +31,28 @@ declare global {
 }
 
 export interface DinoLoaderProps {
-  /** Hauteur de la scène, px si nombre (défaut 48). */
+  /** Hauteur de la scène en px (défaut 100). La scène est mise à l'échelle. */
   height?: number | string;
-  /** Couleur du dino (défaut currentColor) ; accepte un hex, un nom, ou var(--x). */
-  color?: string;
+  /** Largeur logique de la piste en px (défaut 480, max 600). */
+  width?: number | string;
   /** Multiplicateur de vitesse (défaut 1). */
   speed?: number;
   /** Légende optionnelle sous la scène. */
   label?: string;
+  /** Inverse le dino (fond sombre). */
+  dark?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }
 
-export function DinoLoader({ height, color, speed, label, className, style }: DinoLoaderProps) {
+export function DinoLoader({ height, width, speed, label, dark, className, style }: DinoLoaderProps) {
   return (
     <dino-loader
       height={height}
-      color={color}
+      width={width}
       speed={speed}
       label={label}
+      dark={dark ? '' : undefined}
       className={className}
       style={style}
     />

@@ -1,17 +1,22 @@
 # `<dino-loader>`
 
-Composant d'**attente** (loader) inspiré du jeu Chrome Dino : le dino court et
-saute par-dessus des cactus, en boucle, à l'infini. **Non jouable** — c'est une
-animation décorative pour faire patienter, pas un jeu (aucun input, aucune
-collision : le saut est chorégraphié).
+Composant d'**attente** (loader) : le vrai jeu Chrome « T-Rex Runner », en boucle
+infinie et **non jouable**. Il démarre tout seul, le dino court et **saute tout
+seul** par-dessus les cactus, et la boucle ne s'arrête jamais.
+
+Le dino, le décor (sol, nuages, cactus, ptérodactyles, jour/nuit) et l'animation
+de saut sont **exactement** ceux du jeu Chrome : on réutilise le moteur Chromium
+d'origine sans toucher au rendu. On ne fait qu'ajouter un pilote automatique
+(démarrage seul + saut auto + pas de game-over) par-dessus.
 
 - **Universel** : un Web Component (`<dino-loader>`). Marche sur n'importe quelle
   page — HTML pur, React, Vue, etc.
-- **S'adapte au CSS de la page** : monochrome en `currentColor` (hérite de la
-  couleur de texte), taille pilotée par `height`, police du label héritée.
-- **Autonome** : un seul fichier, zéro dépendance, aucun build pour l'utiliser.
-- **Accessible** : `role="status"` + `aria-label` ; respecte
-  `prefers-reduced-motion` (scène figée).
+- **Autonome** : un seul fichier `dino-loader.js`, sprite inliné, zéro dépendance,
+  aucun build pour l'utiliser.
+- **S'adapte** : taille via `height`, fond sombre via `dark`. Le canvas est
+  transparent → le fond de la page transparaît.
+- **Accessible** : `role="status"` + `aria-label` ; si l'utilisateur a activé
+  « réduire les animations » (`prefers-reduced-motion`), le dino reste immobile.
 
 ## Démo
 
@@ -20,59 +25,68 @@ Ouvrir [`preview.html`](preview.html) dans un navigateur.
 ## Usage — HTML pur
 
 ```html
-<script type="module" src="dino-loader.js"></script>
+<script src="dino-loader.js"></script>
 
-<dino-loader height="48" label="Chargement…"></dino-loader>
+<dino-loader height="100" label="Chargement…"></dino-loader>
 ```
 
-Sans build : copier `dino-loader.js` à côté de la page et l'inclure.
+Sans build : copier `dino-loader.js` à côté de la page et l'inclure. (Le sprite
+est embarqué dans le fichier, rien d'autre à copier.)
 
 ## Usage — React
 
 ```tsx
 import { DinoLoader } from './dino-loader.react';
 
-<DinoLoader height={48} label="Chargement…" color="var(--accent)" />
+<DinoLoader height={100} label="Chargement…" />
 ```
 
 Le wrapper enregistre le custom element à l'import et type les props. (On peut
-aussi se passer du wrapper et écrire `<dino-loader …>` directement.)
+aussi écrire `<dino-loader …>` directement.)
 
 ## Attributs / props
 
 | Attribut | Prop | Défaut | Effet |
 |---|---|---|---|
-| `height` | `height` | `48` | hauteur de la scène en px (ou valeur CSS) ; scale tout |
-| `color` | `color` | `currentColor` | couleur du dino/sol/cactus ; hex, nom, ou `var(--x)` |
-| `speed` | `speed` | `1` | multiplicateur de vitesse (2 = ×2 plus rapide) |
+| `height` | `height` | `100` | hauteur de la scène en px ; met toute la scène à l'échelle |
+| `width` | `width` | `480` | largeur logique de la piste en px (max 600) |
+| `speed` | `speed` | `1` | multiplicateur de vitesse (1.6 = plus rapide) |
 | `label` | `label` | — | légende optionnelle sous la scène (police héritée) |
+| `dark` | `dark` | — | inverse le dino pour un fond sombre |
 
-### S'adapter au thème de la page
+Plusieurs `<dino-loader>` peuvent coexister sur la même page (chaque instance est
+indépendante).
 
-Par défaut le dino prend la couleur du texte ambiant :
+## Régénérer le fichier
 
-```html
-<div style="color:#FFD869">
-  <dino-loader></dino-loader>   <!-- dino jaune -->
-</div>
+`dino-loader.js` est **généré** (moteur + pilote + sprite inliné). Pour le
+reconstruire après modification de [`src/dino-loader.driver.js`](src/dino-loader.driver.js) :
+
+```bash
+node scripts/build.mjs
 ```
 
-Ou forcer une couleur (utile pour piocher dans une variable de charte) :
+## Provenance & licence
 
-```html
-<dino-loader color="var(--color-accent, #FFD869)"></dino-loader>
-```
+Le moteur du jeu vient de [`wayou/t-rex-runner`](https://github.com/wayou/t-rex-runner),
+extrait du code Chromium par @liuwayong. Code et sprite sous **licence BSD**
+(Copyright The Chromium Authors) — voir [`vendor/t-rex-runner/LICENSE`](vendor/t-rex-runner/LICENSE).
+Le pilote automatique et l'enrobage Web Component sont ajoutés par-dessus, sans
+modifier le rendu d'origine.
 
 ## Fichiers
 
 | Fichier | Rôle |
 |---|---|
-| `dino-loader.js` | le composant (custom element autonome) — **le livrable** |
+| `dino-loader.js` | **le livrable** : composant autonome (généré) |
+| `src/dino-loader.driver.js` | source du pilote auto + custom element |
+| `scripts/build.mjs` | générateur (moteur + pilote + sprite → `dino-loader.js`) |
+| `vendor/t-rex-runner/` | moteur Chromium d'origine + sprites + LICENSE |
 | `dino-loader.react.tsx` | wrapper React optionnel (props typées) |
-| `preview.html` | showcase live (tailles, couleurs, reduced-motion) |
+| `preview.html` | showcase live |
 | `docs/superpowers/specs/` | spec de conception |
 
 ## Hors scope
 
-Pas de logique de jeu (score, game over, collision), pas de mode nuit/nuages,
-pas de packaging npm. À ajouter seulement si un vrai besoin apparaît.
+Pas de score persistant, pas de son, pas de packaging npm. Le score à l'écran et
+le mode jour/nuit font partie du jeu d'origine et sont conservés tels quels.

@@ -3,6 +3,33 @@
 **Date :** 2026-06-15
 **Statut :** design validé (Charles, 15/06)
 
+## ⚠️ Révision 2 (15/06) — fidélité au vrai jeu
+
+Charles a tranché : il veut **exactement** le dino, le décor et l'animation de
+saut du jeu Chrome (réf. https://mhasbini.com/miscs/react-chrome-dino-demo/) —
+pas une réinterprétation SVG. On **abandonne le SVG pixel-art maison** (rev. 1
+ci-dessous) au profit du **vrai moteur Chromium** (`wayou/t-rex-runner`, licence
+BSD, vendored avec sa LICENSE) :
+
+- moteur d'origine **non modifié** (rendu fidèle : sprite, sol, nuages, cactus,
+  ptérodactyles, score, jour/nuit) ;
+- on l'enrobe dans `<dino-loader>` et on ajoute un **pilote automatique** :
+  démarrage seul, saut auto quand un cactus approche, **pas de game-over** →
+  **non jouable**, boucle infinie ;
+- `dino-loader.js` est **généré** (`scripts/build.mjs`) = bannière + moteur
+  (auto-init retirée) + driver + sprites inlinés en data-URI → un seul fichier.
+- Conséquence sur « s'adapte au CSS » : le dino garde sa couleur d'origine (gris)
+  — `currentColor` n'a plus de sens. Restent : `height` (taille), `width` (piste),
+  `speed`, `label`, `dark` (invert fond sombre), canvas transparent.
+- Multi-instances : le moteur partage `Runner.defaultDimensions` (objet statique)
+  → le driver clone `dimensions` par instance, sinon les loaders s'écrasent.
+- Accessibilité : `prefers-reduced-motion` → dino immobile (le moteur n'en tient
+  pas compte seul).
+
+Le reste du document (rev. 1, approche SVG) est conservé pour mémoire.
+
+---
+
 ## Intention
 
 Composant d'**attente** (loader) inspiré du jeu Chrome Dino, **non jouable** : on

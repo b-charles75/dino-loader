@@ -1,0 +1,252 @@
+/* =====================================================================
+ * <dino-loader> — driver auto-pilot autour du moteur t-rex-runner.
+ *
+ * Le moteur (au-dessus dans le fichier généré) est le code Chromium
+ * d'origine (BSD, voir vendor/t-rex-runner/LICENSE). Ici on ne fait que :
+ *   - l'alimenter en sprite + éléments DOM attendus,
+ *   - le démarrer tout seul (pas d'interaction → NON jouable),
+ *   - faire sauter le dino quand un cactus approche (pilote automatique),
+ *   - neutraliser le game-over (la boucle ne s'arrête jamais).
+ *
+ * Le dino, le décor et l'animation de saut sont donc EXACTEMENT ceux du
+ * jeu Chrome. On ne touche pas au rendu.
+ * ===================================================================== */
+(function () {
+  'use strict';
+
+  var SPRITE_1X = '__SPRITE_1X__';
+  var SPRITE_2X = '__SPRITE_2X__';
+
+  var Runner = window.Runner;
+  if (!Runner) { return; } // moteur absent → rien à faire
+
+  var docPrepared = false;
+  var seq = 0;
+
+  // Injecte (une seule fois) le sprite + les éléments que le moteur cherche
+  // par id/classe dans le document, et le CSS de présentation.
+  function prepareDoc() {
+    if (docPrepared) return;
+    docPrepared = true;
+
+    var holder = document.createElement('div');
+    holder.id = 'offline-resources';
+    holder.style.display = 'none';
+
+    var img1 = new Image();
+    img1.id = 'offline-resources-1x';
+    img1.src = SPRITE_1X;
+
+    var img2 = new Image();
+    img2.id = 'offline-resources-2x';
+    img2.src = SPRITE_2X;
+
+    // Le moteur fait `.icon-offline`.style.visibility = 'hidden' au init.
+    var icon = document.createElement('div');
+    icon.className = 'icon icon-offline';
+
+    holder.appendChild(img1);
+    holder.appendChild(img2);
+    holder.appendChild(icon);
+    document.body.appendChild(holder);
+
+    var css = document.createElement('style');
+    css.setAttribute('data-dino-loader', '');
+    css.textContent = [
+      'dino-loader{display:inline-flex;flex-direction:column;align-items:center;',
+      'gap:.4em;vertical-align:middle;line-height:1;}',
+      'dino-loader[hidden]{display:none;}',
+      'dino-loader .dl-stage{overflow:hidden;position:relative;}',
+      'dino-loader .dl-scale{transform-origin:top left;}',
+      'dino-loader .runner-container{position:relative !important;top:0 !important;}',
+      'dino-loader canvas{display:block;}',
+      'dino-loader .dl-label{font:inherit;font-size:.85em;opacity:.8;color:currentColor;',
+      'text-align:center;white-space:nowrap;}',
+      'dino-loader .dl-label:empty{display:none;}',
+      // dino gris sombre sur fond clair par défaut ; option dark = invert
+      'dino-loader[dark] canvas{filter:invert(1) hue-rotate(180deg);}'
+    ].join('');
+    document.head.appendChild(css);
+  }
+
+  function num(v, dflt) {
+    var n = parseFloat(v);
+    return isFinite(n) && n > 0 ? n : dflt;
+  }
+
+  var TAG = 'dino-loader';
+  var NATIVE_H = 150; // hauteur native du canvas du jeu
+
+  var DinoLoader = function () {};
+  DinoLoader.prototype = Object.create(HTMLElement.prototype);
+
+  function defineEl() {
+    class DinoLoaderEl extends HTMLElement {
+      static get observedAttributes() { return ['height', 'width', 'speed', 'label']; }
+
+      connectedCallback() {
+        prepareDoc();
+        if (!this.hasAttribute('role')) this.setAttribute('role', 'status');
+        if (!this._built) this._build();
+        this._applySize();
+        this._syncLabel();
+      }
+
+      disconnectedCallback() {
+        if (this._raf) cancelAnimationFrame(this._raf);
+        if (this._runner && this._runner.stop) {
+          try { this._runner.stop(); } catch (e) {}
+        }
+      }
+
+      attributeChangedCallback(name) {
+        if (!this._built) return;
+        if (name === 'label') this._syncLabel();
+        else this._applySize();
+      }
+
+      _build() {
+        this._built = true;
+        var id = 'dl-host-' + (++seq);
+        this.innerHTML =
+          '<div class="dl-stage"><div class="dl-scale">' +
+          '<div class="dl-host" id="' + id + '"></div></div></div>' +
+          '<span class="dl-label"></span>';
+        this._stage = this.querySelector('.dl-stage');
+        this._scale = this.querySelector('.dl-scale');
+        this._host = this.querySelector('.dl-host');
+        this._hostId = id;
+        this._boot();
+      }
+
+      _applySize() {
+        if (!this._stage) return;
+        var h = num(this.getAttribute('height'), 100);
+        var wLogical = Math.min(600, num(this.getAttribute('width'), 480));
+        var s = h / NATIVE_H;
+        this._wLogical = wLogical;
+        this._host.style.width = wLogical + 'px';
+        this._host.style.height = NATIVE_H + 'px';
+        this._scale.style.width = wLogical + 'px';
+        this._scale.style.height = NATIVE_H + 'px';
+        this._scale.style.transform = 'scale(' + s + ')';
+        this._stage.style.width = (wLogical * s) + 'px';
+        this._stage.style.height = h + 'px';
+        if (this._runner) {
+          // forcer le moteur à recalculer la largeur du canvas
+          try { this._runner.adjustDimensions(); } catch (e) {}
+        }
+      }
+
+      _syncLabel() {
+        var lbl = this.getAttribute('label') || '';
+        var el = this.querySelector('.dl-label');
+        if (el) el.textContent = lbl;
+        this.setAttribute('aria-label', lbl || 'Chargement');
+      }
+
+      _boot() {
+        var self = this;
+        this._applySize();
+
+        var speed = num(this.getAttribute('speed'), 1);
+        var cfg = Object.assign({}, Runner.config);
+        cfg.SPEED = Runner.config.SPEED * speed;
+        cfg.MAX_SPEED = Runner.config.MAX_SPEED * speed;
+        cfg.ACCELERATION = Runner.config.ACCELERATION * speed;
+
+        Runner.instance_ = null; // contourne le singleton → instances multiples OK
+        var inst;
+        try {
+          inst = new Runner('#' + this._hostId, cfg);
+        } catch (e) {
+          return; // moteur indisponible
+        }
+        // Le moteur fait `this.dimensions = Runner.defaultDimensions` (objet
+        // statique PARTAGÉ) : avec plusieurs loaders, la dernière instance
+        // écrase la largeur de toutes. On donne à chacune son propre objet.
+        inst.dimensions = {
+          WIDTH: Runner.defaultDimensions.WIDTH,
+          HEIGHT: Runner.defaultDimensions.HEIGHT
+        };
+        this._runner = inst;
+
+        // Le constructeur charge le sprite puis appelle init() (async).
+        // On attend que le jeu soit prêt, puis on le passe en pilote auto.
+        var tries = 0;
+        var wait = setInterval(function () {
+          tries++;
+          if (inst.tRex && inst.canvas && inst.horizon) {
+            clearInterval(wait);
+            self._takeControl();
+          } else if (tries > 600) {
+            clearInterval(wait); // ~10 s : abandon silencieux
+          }
+        }, 16);
+      }
+
+      _takeControl() {
+        var inst = this._runner;
+
+        // Non jouable : on coupe l'écoute clavier/souris/tactile.
+        try { inst.stopListening(); } catch (e) {}
+
+        // Accessibilité : si l'utilisateur refuse les animations, on laisse le
+        // dino immobile (le moteur a déjà dessiné la scène au repos) au lieu de
+        // faire tourner le jeu en boucle.
+        var reduce = window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) {
+          inst.setArcadeMode = function () {};
+          this._applySize();
+          return;
+        }
+        // Pas de plein écran « arcade ».
+        inst.setArcadeMode = function () {};
+        inst.setArcadeModeContainerScale = function () {};
+        // La boucle ne meurt jamais.
+        inst.gameOver = function () {};
+
+        this._applySize();
+
+        // Démarrage : on active la partie et on lance le dino en course.
+        inst.activated = true;
+        inst.playing = true;
+        try { inst.tRex.update(0, 'RUNNING'); } catch (e) {}
+        inst.update();
+
+        this._autopilot();
+      }
+
+      _autopilot() {
+        var self = this;
+        var inst = this._runner;
+
+        function frame() {
+          if (!self.isConnected) return;
+          var trex = inst.tRex;
+          var obs = inst.horizon && inst.horizon.obstacles;
+          if (trex && obs && obs.length && !trex.jumping && !trex.ducking) {
+            var o = obs[0];
+            var trexRight = trex.xPos + trex.config.WIDTH;          // ~94
+            var gap = o.xPos - trexRight;
+            // sauter quand le cactus arrive à portée (proportionnel à la vitesse)
+            var lead = 24 + inst.currentSpeed * 8;
+            if (gap > 0 && gap < lead) {
+              inst.tRex.startJump(inst.currentSpeed);
+            }
+          }
+          self._raf = requestAnimationFrame(frame);
+        }
+        this._raf = requestAnimationFrame(frame);
+      }
+    }
+
+    if (!customElements.get(TAG)) {
+      customElements.define(TAG, DinoLoaderEl);
+    }
+  }
+
+  if (document.body) defineEl();
+  else document.addEventListener('DOMContentLoaded', defineEl);
+})();
