@@ -206,6 +206,11 @@
         inst.setArcadeModeContainerScale = function () {};
         // La boucle ne meurt jamais.
         inst.gameOver = function () {};
+        // Pas de score affiché : c'est un loader, pas une partie. On neutralise
+        // le dessin du compteur (le reste du moteur — nuit, difficulté — vit sa vie).
+        if (inst.distanceMeter) {
+          inst.distanceMeter.update = function () { return false; };
+        }
 
         this._applySize();
 

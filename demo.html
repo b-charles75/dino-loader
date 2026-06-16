@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chargement…</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2.5rem; background: #FFFAEB; color: #1b1b1b;
+    }
+    .brand { display: flex; flex-direction: column; align-items: center; gap: .4rem; }
+    .brand .logo {
+      font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em;
+    }
+    .brand .sub { font-size: .85rem; color: #726B68; }
+    .panel {
+      width: min(520px, 90vw);
+      background: #fff; border: 1px solid #efe7d6; border-radius: 16px;
+      padding: 2.5rem 2rem 2rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,.05);
+      display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+    }
+    .panel p { margin: 0; color: #555; font-size: .95rem; text-align: center; }
+    .bar { width: 70%; height: 4px; border-radius: 99px; background: #f0e9da; overflow: hidden; }
+    .bar i { display: block; height: 100%; width: 40%; border-radius: 99px;
+      background: #FFD869; animation: slide 1.6s ease-in-out infinite; }
+    @keyframes slide { 0% { margin-left: -40% } 100% { margin-left: 100% } }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <div class="logo">Mon application</div>
+    <div class="sub">Tableau de bord</div>
+  </div>
+
+  <div class="panel">
+    <dino-loader height="110" width="440" label="Préparation de vos données…"></dino-loader>
+    <div class="bar"><i></i></div>
+    <p>Encore quelques secondes, on récupère vos derniers chiffres.</p>
+  </div>
+
+  <script src="./dino-loader.js"></script>
+</body>
+</html>

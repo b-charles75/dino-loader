@@ -88,5 +88,5 @@ modifier le rendu d'origine.
 
 ## Hors scope
 
-Pas de score persistant, pas de son, pas de packaging npm. Le score à l'écran et
-le mode jour/nuit font partie du jeu d'origine et sont conservés tels quels.
+Pas de son, pas de packaging npm. Le **compteur de score** du jeu d'origine est
+masqué (c'est un loader, pas une partie) ; le mode jour/nuit, lui, est conservé.
