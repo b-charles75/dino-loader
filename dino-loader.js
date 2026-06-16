@@ -2886,23 +2886,28 @@
         this._buildTintedSprite();
       }
 
-      // Table luminance(0..255) -> color. Gradient ANCHORED on the accent:
-      //   - the DARK tones of the sprite (dino/cactus/ground, gray #535353) -> the EXACT accent
-      //   - the LIGHT tones (clouds/moon, gray #DADADA) -> a lightened version
-      // So the LIGHTNESS of the accent matters: light accent => light dino.
+      // Table luminance(0..255) -> color.
+      //   - everything from black up to MID (dino/cactus/ground AND their
+      //     anti-aliased edges) -> the EXACT accent, FLAT. A flat dark range is
+      //     what keeps the dino a single crisp colour instead of a fuzzy
+      //     gradient (intermediate edge luminances would otherwise take in-between
+      //     tints and read as blurry).
+      //   - above MID, ramp toward a lightened accent so the light tones
+      //     (clouds/moon, gray #DADADA ~0.855) stay lighter than the dino.
       _buildLut(rgb) {
         var m = /(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(rgb || '');
         if (!m) { this._lut = null; return; }
         var A = [+m[1], +m[2], +m[3]];          // accent = dino color
-        var DARK = 0.325, LIGHT = 0.855;        // luminances of the sprite's 2 tones
+        var MID = 0.62, LIGHT = 0.855;          // flat up to MID; ramp MID..LIGHT
         var k = 0.6;                            // how much light tones are pushed toward white
         var lr = new Uint8ClampedArray(256), lg = new Uint8ClampedArray(256), lb = new Uint8ClampedArray(256);
         var lut = [lr, lg, lb];
         for (var ch = 0; ch < 3; ch++) {
           var light = A[ch] * (1 - k) + 255 * k; // light tone = lightened accent
-          var slope = (light - A[ch]) / (LIGHT - DARK);
           for (var i = 0; i < 256; i++) {
-            lut[ch][i] = A[ch] + (i / 255 - DARK) * slope;
+            var lum = i / 255;
+            lut[ch][i] = lum <= MID ? A[ch]
+              : A[ch] + (lum - MID) / (LIGHT - MID) * (light - A[ch]);
           }
         }
         this._lut = lut;
@@ -2951,7 +2956,9 @@
       _applySize() {
         if (!this._stage) return;
         var h = num(this.getAttribute('height'), 100);
-        var wLogical = Math.min(600, num(this.getAttribute('width'), 480));
+        // Min 160: below that the track is too short for the auto-pilot to react
+        // to an incoming cactus before it reaches the dino (measured).
+        var wLogical = Math.min(600, Math.max(160, num(this.getAttribute('width'), 480)));
         var s = h / NATIVE_H;
         this._wLogical = wLogical;
         this._host.style.width = wLogical + 'px';
@@ -2964,6 +2971,12 @@
         if (this._runner) {
           // force the engine to recompute the canvas width
           try { this._runner.adjustDimensions(); } catch (e) {}
+          // The horizon spawns obstacles at dimensions.WIDTH. It keeps a
+          // reference to the engine's SHARED default dimensions object, which
+          // the narrowest <dino-loader> on the page overwrites — so obstacles
+          // would pop in mid-canvas instead of entering from the right edge.
+          // Point the horizon at THIS instance's own dimensions.
+          if (this._runner.horizon) this._runner.horizon.dimensions = this._runner.dimensions;
         }
       }
 
@@ -2979,10 +2992,19 @@
         this._applySize();
 
         var speed = num(this.getAttribute('speed'), 1);
+        // A loader runs forever, so we must NOT let the game keep accelerating
+        // like the real one does: a rising speed makes the jump overshoot the
+        // canvas (dino clipped at the top) and mistimes the auto-jump (the dino
+        // clips the cactus). We pin a CONSTANT speed and clamp it to the band
+        // where the auto-pilot reliably clears every cactus (measured). Below
+        // ~6 the dino can't clear a wide cactus within the 150px canvas, so the
+        // speed multiplier only goes faster than the default, never slower.
+        var base = Math.max(6, Math.min(11, Runner.config.SPEED * speed));
+        this._spd = base;
         var cfg = Object.assign({}, Runner.config);
-        cfg.SPEED = Runner.config.SPEED * speed;
-        cfg.MAX_SPEED = Runner.config.MAX_SPEED * speed;
-        cfg.ACCELERATION = Runner.config.ACCELERATION * speed;
+        cfg.SPEED = base;
+        cfg.MAX_SPEED = base;
+        cfg.ACCELERATION = 0;
 
         Runner.instance_ = null; // bypass the singleton → multiple instances OK
         var inst;
@@ -3063,6 +3085,10 @@
         // Start: activate the game and send the dino off running.
         inst.activated = true;
         inst.playing = true;
+        inst.currentSpeed = this._spd;
+        // Nudge the dino off the left edge so its tail isn't clipped (it sits at
+        // xPos 0 by default, flush against the canvas edge).
+        inst.tRex.xPos = 8;
         try { inst.tRex.update(0, 'RUNNING'); } catch (e) {}
         inst.update();
 
@@ -3075,6 +3101,10 @@
 
         function frame() {
           if (!self.isConnected) return;
+          // Lock the speed every frame: the engine scales speed down on narrow
+          // canvases ("mobile" heuristic), which would drop us below the band
+          // where the auto-pilot clears the cacti. Keep it constant instead.
+          inst.currentSpeed = self._spd;
           var trex = inst.tRex;
           var obs = inst.horizon && inst.horizon.obstacles;
           if (trex && obs && obs.length && !trex.jumping && !trex.ducking) {
