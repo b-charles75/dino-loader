@@ -1,17 +1,17 @@
 /**
- * Wrapper React mince pour <dino-loader>.
+ * Thin React wrapper for <dino-loader>.
  *
- * Importer ce fichier enregistre le custom element (effet de bord de l'import
- * de ./dino-loader.js), puis expose un composant <DinoLoader /> avec des props
- * typées qui se mappent sur les attributs.
+ * Importing this file registers the custom element (side effect of importing
+ * ./dino-loader.js), then exposes a <DinoLoader /> component with typed props
+ * that map onto the attributes.
  *
  *   import { DinoLoader } from './dino-loader.react';
- *   <DinoLoader height={100} label="Chargement…" />
+ *   <DinoLoader height={100} label="Loading…" />
  */
 import * as React from 'react';
 import './dino-loader.js';
 
-// Déclare la balise pour le JSX (sinon TS ne connaît pas <dino-loader>).
+// Declare the tag for JSX (otherwise TS does not know about <dino-loader>).
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
@@ -32,17 +32,17 @@ declare global {
 }
 
 export interface DinoLoaderProps {
-  /** Hauteur de la scène en px (défaut 100). La scène est mise à l'échelle. */
+  /** Scene height in px (default 100). The whole scene is scaled. */
   height?: number | string;
-  /** Largeur logique de la piste en px (défaut 480, max 600). */
+  /** Logical track width in px (default 480, max 600). */
   width?: number | string;
-  /** Multiplicateur de vitesse (défaut 1). */
+  /** Speed multiplier (default 1). */
   speed?: number;
-  /** Légende optionnelle sous la scène. */
+  /** Optional caption under the scene. */
   label?: string;
-  /** Recolore tout le jeu. Couleur CSS ou var(--x). Défaut : gris d'origine. */
+  /** Recolor the whole game. CSS color or var(--x). Default: original gray. */
   color?: string;
-  /** Inverse le dino (fond sombre). */
+  /** Invert the dino (dark background). */
   dark?: boolean;
   className?: string;
   style?: React.CSSProperties;

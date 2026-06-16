@@ -1,14 +1,16 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>&lt;dino-loader&gt; — preview</title>
+  <title>&lt;dino-loader&gt; — the Chrome dino as a loading spinner</title>
+  <meta name="description" content="A waiting/loading Web Component: the Chrome T-Rex Runner, looping forever and non-playable. The dino runs and auto-jumps the cacti. Drop-in custom element, zero dependencies, themeable.">
   <style>
     :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     body { margin: 0; padding: 2rem; color: #1a1a1a; background: #fafafa; }
     h1 { font-size: 1.2rem; font-weight: 700; }
     p.lead { color: #555; max-width: 64ch; }
+    .repo { font-size: .9rem; }
     .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-top: 1.5rem; }
     .card { border: 1px solid #e3e3e3; border-radius: 12px; padding: 1.25rem; background: #fff; }
     .card h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #888; margin: 0 0 .9rem; }
@@ -22,32 +24,33 @@
 <body>
   <h1>&lt;dino-loader&gt;</h1>
   <p class="lead">
-    Le vrai jeu Chrome « T-Rex Runner » (code Chromium d'origine, licence BSD) en
-    boucle infinie et <strong>non jouable</strong> : il démarre seul, le dino court
-    et <strong>saute tout seul</strong> par-dessus les cactus, et la boucle ne s'arrête
-    jamais. La taille s'adapte via <code>height</code> ; <code>speed</code> règle le
-    rythme ; <code>label</code> ajoute une légende ; <code>dark</code> inverse le dino
-    pour les fonds sombres.
+    The real Chrome “T-Rex Runner” game (original Chromium code, BSD license),
+    looping forever and <strong>non-playable</strong>: it starts on its own, the
+    dino runs and <strong>auto-jumps</strong> over the cacti, and the loop never
+    stops. Size adapts via <code>height</code>; <code>speed</code> sets the pace;
+    <code>label</code> adds a caption; <code>color</code> recolors the scene;
+    <code>dark</code> inverts the dino for dark backgrounds.
   </p>
+  <p class="repo"><a href="https://github.com/b-charles75/dino-loader">View on GitHub →</a></p>
 
   <div class="grid">
     <div class="card">
-      <h2>Défaut (height=100)</h2>
-      <div class="stage"><dino-loader label="Chargement…"></dino-loader></div>
+      <h2>Default (height=100)</h2>
+      <div class="stage"><dino-loader label="Loading…"></dino-loader></div>
     </div>
 
     <div class="card">
-      <h2>Fond sombre (attribut dark)</h2>
-      <div class="stage theme-dark"><dino-loader height="100" dark label="Patientez…"></dino-loader></div>
+      <h2>Dark background (dark attribute)</h2>
+      <div class="stage theme-dark"><dino-loader height="100" dark label="Please wait…"></dino-loader></div>
     </div>
 
     <div class="card">
-      <h2>Couleur d'accent (color)</h2>
-      <div class="stage"><dino-loader height="100" color="#2563eb" label="Chargement…"></dino-loader></div>
+      <h2>Accent color (color)</h2>
+      <div class="stage"><dino-loader height="100" color="#2563eb" label="Loading…"></dino-loader></div>
     </div>
 
     <div class="card">
-      <h2>Accent clair (color)</h2>
+      <h2>Light accent (color)</h2>
       <div class="stage"><dino-loader height="100" color="#22c55e"></dino-loader></div>
     </div>
 
@@ -57,29 +60,29 @@
     </div>
 
     <div class="card">
-      <h2>Grand (height=150, natif)</h2>
+      <h2>Large (height=150, native)</h2>
       <div class="stage theme-brand"><dino-loader height="150"></dino-loader></div>
     </div>
 
     <div class="card">
-      <h2>Piste courte (width=280)</h2>
+      <h2>Short track (width=280)</h2>
       <div class="stage"><dino-loader height="90" width="280"></dino-loader></div>
     </div>
 
     <div class="card">
-      <h2>Rapide (speed=1.6)</h2>
+      <h2>Fast (speed=1.6)</h2>
       <div class="stage"><dino-loader height="90" speed="1.6"></dino-loader></div>
     </div>
 
     <div class="card">
-      <h2>Lent (speed=0.7)</h2>
+      <h2>Slow (speed=0.7)</h2>
       <div class="stage"><dino-loader height="90" speed="0.7"></dino-loader></div>
     </div>
 
     <div class="card">
-      <h2>En ligne dans du texte</h2>
+      <h2>Inline within text</h2>
       <div class="stage">
-        <span class="inline-demo">Chargement <dino-loader height="28" width="180"></dino-loader> en cours</span>
+        <span class="inline-demo">Loading <dino-loader height="28" width="180"></dino-loader> in progress</span>
       </div>
     </div>
   </div>
