@@ -2875,6 +2875,31 @@
         this._tint = rgb || c;
       }
 
+      // Recolore la frame courante : teinte de l'accent, luminance conservée.
+      _applyTint() {
+        var inst = this._runner;
+        var canvas = inst.canvas;
+        var ctx = inst.canvasCtx;
+        var w = canvas.width, h = canvas.height; // pixels device
+        // snapshot de la frame grise (avec son alpha) pour re-masquer après
+        var off = this._off || (this._off = document.createElement('canvas'));
+        if (off.width !== w || off.height !== h) { off.width = w; off.height = h; }
+        var octx = this._octx || (this._octx = off.getContext('2d'));
+        octx.setTransform(1, 0, 0, 1, 0, 0);
+        octx.clearRect(0, 0, w, h);
+        octx.drawImage(canvas, 0, 0);
+        // colorise sur place (le blend `color` remplit aussi les zones vides…)
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalCompositeOperation = 'color';
+        ctx.fillStyle = this._tint;
+        ctx.fillRect(0, 0, w, h);
+        // …donc on re-découpe avec l'alpha d'origine
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.drawImage(off, 0, 0);
+        ctx.restore();
+      }
+
       _build() {
         this._built = true;
         var id = 'dl-host-' + (++seq);
@@ -2985,21 +3010,15 @@
         this._applySize();
         this._resolveTint();
 
-        // Recolorisation : après chaque frame dessinée par le moteur, on tinte
-        // tous les pixels non transparents avec la couleur demandée (source-in).
-        // Tint pixel-exact qui suit l'alpha (bords lissés conservés).
+        // Recolorisation : après chaque frame, on applique la TEINTE de l'accent
+        // en conservant la LUMINANCE de chaque pixel (blend `color`). Le sprite
+        // Chrome a 2 tons (dino #535353 foncé, nuages/lune #DADADA clair) → on
+        // garde ce dégradé, juste habillé de l'accent (dino foncé, nuage clair).
         var self = this;
         var origUpdate = inst.update.bind(inst);
         inst.update = function () {
           origUpdate();
-          if (self._tint && inst.canvasCtx) {
-            var ctx = inst.canvasCtx;
-            ctx.save();
-            ctx.globalCompositeOperation = 'source-in';
-            ctx.fillStyle = self._tint;
-            ctx.fillRect(0, 0, inst.dimensions.WIDTH, inst.dimensions.HEIGHT);
-            ctx.restore();
-          }
+          if (self._tint && inst.canvasCtx) self._applyTint();
         };
 
         // Démarrage : on active la partie et on lance le dino en course.
