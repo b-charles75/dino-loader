@@ -22,6 +22,7 @@ declare global {
           width?: number | string;
           speed?: number | string;
           label?: string;
+          color?: string;
           dark?: boolean | string;
         },
         HTMLElement
@@ -39,19 +40,22 @@ export interface DinoLoaderProps {
   speed?: number;
   /** Légende optionnelle sous la scène. */
   label?: string;
+  /** Recolore tout le jeu. Couleur CSS ou var(--x). Défaut : gris d'origine. */
+  color?: string;
   /** Inverse le dino (fond sombre). */
   dark?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }
 
-export function DinoLoader({ height, width, speed, label, dark, className, style }: DinoLoaderProps) {
+export function DinoLoader({ height, width, speed, label, color, dark, className, style }: DinoLoaderProps) {
   return (
     <dino-loader
       height={height}
       width={width}
       speed={speed}
       label={label}
+      color={color}
       dark={dark ? '' : undefined}
       className={className}
       style={style}

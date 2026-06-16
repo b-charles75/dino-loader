@@ -52,7 +52,19 @@ aussi écrire `<dino-loader …>` directement.)
 | `width` | `width` | `480` | largeur logique de la piste en px (max 600) |
 | `speed` | `speed` | `1` | multiplicateur de vitesse (1.6 = plus rapide) |
 | `label` | `label` | — | légende optionnelle sous la scène (police héritée) |
+| `color` | `color` | _(gris)_ | recolore tout le jeu ; couleur CSS ou `var(--x)` |
 | `dark` | `dark` | — | inverse le dino pour un fond sombre |
+
+### Couleur d'accent
+
+Le dino est gris par défaut (fidèle au jeu). Pour l'habiller aux couleurs d'une
+app, `color` recolore toute la scène (dino, sol, cactus, nuages) au pixel près —
+il accepte une couleur CSS ou une variable de charte :
+
+```html
+<dino-loader color="var(--accent)"></dino-loader>
+<dino-loader color="#3E3CBA"></dino-loader>
+```
 
 Plusieurs `<dino-loader>` peuvent coexister sur la même page (chaque instance est
 indépendante).

@@ -2839,7 +2839,7 @@
 
   function defineEl() {
     class DinoLoaderEl extends HTMLElement {
-      static get observedAttributes() { return ['height', 'width', 'speed', 'label']; }
+      static get observedAttributes() { return ['height', 'width', 'speed', 'label', 'color']; }
 
       connectedCallback() {
         prepareDoc();
@@ -2859,7 +2859,20 @@
       attributeChangedCallback(name) {
         if (!this._built) return;
         if (name === 'label') this._syncLabel();
+        else if (name === 'color') this._resolveTint();
         else this._applySize();
+      }
+
+      // Résout l'attribut `color` (couleur CSS ou var(--x)) en rgb concret,
+      // via un sonde dans le contexte CSS de l'élément. Null = pas de tint (gris d'origine).
+      _resolveTint() {
+        var c = this.getAttribute('color');
+        if (!c) { this._tint = null; return; }
+        var probe = this._probe || (this._probe = document.createElement('span'));
+        probe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;color:' + c;
+        if (probe.parentNode !== this) this.appendChild(probe);
+        var rgb = getComputedStyle(probe).color;
+        this._tint = rgb || c;
       }
 
       _build() {
@@ -2970,6 +2983,24 @@
         }
 
         this._applySize();
+        this._resolveTint();
+
+        // Recolorisation : après chaque frame dessinée par le moteur, on tinte
+        // tous les pixels non transparents avec la couleur demandée (source-in).
+        // Tint pixel-exact qui suit l'alpha (bords lissés conservés).
+        var self = this;
+        var origUpdate = inst.update.bind(inst);
+        inst.update = function () {
+          origUpdate();
+          if (self._tint && inst.canvasCtx) {
+            var ctx = inst.canvasCtx;
+            ctx.save();
+            ctx.globalCompositeOperation = 'source-in';
+            ctx.fillStyle = self._tint;
+            ctx.fillRect(0, 0, inst.dimensions.WIDTH, inst.dimensions.HEIGHT);
+            ctx.restore();
+          }
+        };
 
         // Démarrage : on active la partie et on lance le dino en course.
         inst.activated = true;
