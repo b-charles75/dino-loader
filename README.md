@@ -15,7 +15,7 @@ not a game).
 </p>
 
 ```html
-<script src="https://unpkg.com/dino-run-loader"></script>
+<script src="https://unpkg.com/dino-run-loader@1"></script>
 
 <dino-loader label="Loading…"></dino-loader>
 ```
@@ -39,14 +39,33 @@ re-drawn imitation.
 
 ## Quick start
 
-**CDN (recommended)** — nothing to install:
+**npm** (recommended for apps) — install, then import once; the import registers
+the `<dino-loader>` custom element:
+
+```bash
+npm install dino-run-loader
+```
+```js
+import 'dino-run-loader';      // registers <dino-loader> globally
+// now use <dino-loader …></dino-loader> anywhere in your markup
+```
+
+**CDN** — no install, great for a quick try or a static page:
 
 ```html
-<script src="https://unpkg.com/dino-run-loader"></script>
+<script src="https://unpkg.com/dino-run-loader@1"></script>
 <dino-loader height="100" label="Loading…"></dino-loader>
 ```
 
-**Self-hosted** — copy the single file next to your page:
+For production over a CDN, pin the exact version and add Subresource Integrity:
+
+```html
+<script src="https://unpkg.com/dino-run-loader@1.0.0/dino-loader.js"
+        integrity="sha384-gYSJDGsbTVl/W3d9j6ledJOTtp7NWqKNubE6a/UnGcjsYGTV9GYvNpC3zJa0LHhp"
+        crossorigin="anonymous"></script>
+```
+
+**Self-hosted** — copy the single `dino-loader.js` next to your page:
 
 ```html
 <script src="dino-loader.js"></script>
@@ -54,7 +73,7 @@ re-drawn imitation.
 ```
 
 The sprite is embedded in `dino-loader.js`; there is nothing else to copy and no
-build step to use it.
+build step to use it. (`jsdelivr` works too: `https://cdn.jsdelivr.net/npm/dino-run-loader@1`.)
 
 **React** (typed wrapper):
 
