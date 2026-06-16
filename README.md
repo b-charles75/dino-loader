@@ -60,8 +60,8 @@ import 'dino-run-loader';      // registers <dino-loader> globally
 For production over a CDN, pin the exact version and add Subresource Integrity:
 
 ```html
-<script src="https://unpkg.com/dino-run-loader@1.0.0/dino-loader.js"
-        integrity="sha384-gYSJDGsbTVl/W3d9j6ledJOTtp7NWqKNubE6a/UnGcjsYGTV9GYvNpC3zJa0LHhp"
+<script src="https://unpkg.com/dino-run-loader@1.0.1/dino-loader.js"
+        integrity="sha384-J9RVV3aNYpe5Yvi7Ng0wVoKMYP+PhZDGnOnrUGYGhFS+PI+/ev0VHIIoDOyQJEgT"
         crossorigin="anonymous"></script>
 ```
 

@@ -3092,6 +3092,21 @@
         try { inst.tRex.update(0, 'RUNNING'); } catch (e) {}
         inst.update();
 
+        // The engine's resize handler (adjustDimensions) calls stop() while
+        // playing — built for the full-screen game, it freezes the loop on any
+        // window resize and never resumes (we're non-interactive). Our size is
+        // fixed by attributes, so wrap it to re-resume the loop after resizing.
+        var origAdjust = inst.adjustDimensions.bind(inst);
+        inst.adjustDimensions = function () {
+          try { origAdjust(); } catch (e) {}
+          inst.playing = true;
+          inst.activated = true;
+          inst.currentSpeed = self._spd;
+          if (inst.horizon) inst.horizon.dimensions = inst.dimensions;
+          if (inst.tRex) inst.tRex.xPos = 8;
+          try { inst.update(); } catch (e) {}
+        };
+
         this._autopilot();
       }
 
