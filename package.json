@@ -1,6 +1,6 @@
 {
   "name": "dino-run-loader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A waiting/loading Web Component: the Chrome T-Rex Runner running and auto-jumping over cacti, non-playable, themeable. Drop-in, zero dependencies.",
   "type": "module",
   "main": "dino-loader.js",
