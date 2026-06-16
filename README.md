@@ -85,7 +85,7 @@ also use `<dino-loader …>` directly in JSX.
 |---|---|---|---|
 | `height` | `height` | `100` | scene height in px; scales the whole scene |
 | `width` | `width` | `480` | logical track width in px (max 600) |
-| `speed` | `speed` | `1` | speed multiplier (`1.6` = faster) |
+| `speed` | `speed` | `1` | speed multiplier — `1.6` = faster (clamped to a safe range; only speeds up, never below the default) |
 | `label` | `label` | — | optional caption under the scene (inherits font) |
 | `color` | `color` | _(gray)_ | recolor the whole scene; any CSS color or `var(--x)` |
 | `dark` | `dark` | — | invert the dino for dark backgrounds |
