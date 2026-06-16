@@ -1,0 +1,27 @@
+dino-run-loader
+================
+
+This project is licensed under the MIT License (see LICENSE) for its own code:
+the auto-pilot driver, the Web Component wrapper, the build script and the
+React wrapper.
+
+It bundles third-party software:
+
+T-Rex Runner (game engine + sprite sheet)
+-----------------------------------------
+The running/jumping dinosaur, the scenery and the jump animation are the Chrome
+"T-Rex Runner" offline game, extracted from the Chromium project.
+
+  - Engine and sprite: Copyright (c) 2014 The Chromium Authors.
+    Governed by a BSD 3-Clause style license.
+  - Packaging used as the source: wayou/t-rex-runner
+    (https://github.com/wayou/t-rex-runner) — Copyright (c) 2022 牛さん,
+    BSD 3-Clause License.
+
+The full BSD 3-Clause license text and copyright notice are kept in:
+    vendor/t-rex-runner/LICENSE
+
+Per the BSD 3-Clause terms, that copyright notice and license are retained and
+distributed with this software (including inside the generated dino-loader.js
+header). The names of the original authors are not used to endorse or promote
+this project.

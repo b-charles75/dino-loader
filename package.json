@@ -1,0 +1,50 @@
+{
+  "name": "dino-run-loader",
+  "version": "1.0.0",
+  "description": "A waiting/loading Web Component: the Chrome T-Rex Runner running and auto-jumping over cacti, non-playable, themeable. Drop-in, zero dependencies.",
+  "type": "module",
+  "main": "dino-loader.js",
+  "module": "dino-loader.js",
+  "unpkg": "dino-loader.js",
+  "jsdelivr": "dino-loader.js",
+  "exports": {
+    ".": "./dino-loader.js",
+    "./react": "./dino-loader.react.tsx"
+  },
+  "files": [
+    "dino-loader.js",
+    "dino-loader.react.tsx",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "vendor/t-rex-runner/LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "keywords": [
+    "loader",
+    "spinner",
+    "web-component",
+    "custom-element",
+    "dino",
+    "t-rex",
+    "chrome-dino",
+    "loading",
+    "animation"
+  ],
+  "author": "Charles Boonen",
+  "license": "MIT",
+  "homepage": "https://github.com/charlesboonen/dino-run-loader#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charlesboonen/dino-run-loader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/charlesboonen/dino-run-loader/issues"
+  },
+  "sideEffects": [
+    "dino-loader.js",
+    "dino-loader.react.tsx"
+  ]
+}
