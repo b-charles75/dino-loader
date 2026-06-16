@@ -2864,39 +2864,57 @@
       }
 
       // Résout l'attribut `color` (couleur CSS ou var(--x)) en rgb concret,
-      // via un sonde dans le contexte CSS de l'élément. Null = pas de tint (gris d'origine).
+      // via une sonde dans le contexte CSS, puis construit la table de tint.
+      // Null = pas de tint (gris d'origine).
       _resolveTint() {
         var c = this.getAttribute('color');
-        if (!c) { this._tint = null; return; }
+        if (!c) { this._tint = null; this._lut = null; return; }
         var probe = this._probe || (this._probe = document.createElement('span'));
         probe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;color:' + c;
         if (probe.parentNode !== this) this.appendChild(probe);
         var rgb = getComputedStyle(probe).color;
         this._tint = rgb || c;
+        this._buildLut(this._tint);
       }
 
-      // Recolore la frame courante : teinte de l'accent, luminance conservée.
+      // Table luminance(0..255) -> couleur. Dégradé ANCRÉ sur l'accent :
+      //   - les tons FONCÉS du sprite (dino/cactus/sol, gris #535353) -> l'accent EXACT
+      //   - les tons CLAIRS (nuages/lune, gris #DADADA) -> une version éclaircie
+      // Ainsi la CLARTÉ de l'accent compte : accent clair => dino clair.
+      _buildLut(rgb) {
+        var m = /(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(rgb || '');
+        if (!m) { this._lut = null; return; }
+        var A = [+m[1], +m[2], +m[3]];          // accent = couleur du dino
+        var DARK = 0.325, LIGHT = 0.855;        // luminances des 2 tons du sprite
+        var k = 0.6;                            // éclaircissement des tons clairs vers le blanc
+        var lr = new Uint8ClampedArray(256), lg = new Uint8ClampedArray(256), lb = new Uint8ClampedArray(256);
+        var lut = [lr, lg, lb];
+        for (var ch = 0; ch < 3; ch++) {
+          var light = A[ch] * (1 - k) + 255 * k; // ton clair = accent éclairci
+          var slope = (light - A[ch]) / (LIGHT - DARK);
+          for (var i = 0; i < 256; i++) {
+            lut[ch][i] = A[ch] + (i / 255 - DARK) * slope;
+          }
+        }
+        this._lut = lut;
+      }
+
+      // Recolore la frame : chaque pixel mappé via la table selon sa luminance.
+      // L'alpha est conservé tel quel (bords lissés intacts).
       _applyTint() {
-        var inst = this._runner;
-        var canvas = inst.canvas;
-        var ctx = inst.canvasCtx;
-        var w = canvas.width, h = canvas.height; // pixels device
-        // snapshot de la frame grise (avec son alpha) pour re-masquer après
-        var off = this._off || (this._off = document.createElement('canvas'));
-        if (off.width !== w || off.height !== h) { off.width = w; off.height = h; }
-        var octx = this._octx || (this._octx = off.getContext('2d'));
-        octx.setTransform(1, 0, 0, 1, 0, 0);
-        octx.clearRect(0, 0, w, h);
-        octx.drawImage(canvas, 0, 0);
-        // colorise sur place (le blend `color` remplit aussi les zones vides…)
+        if (!this._lut) return;
+        var ctx = this._runner.canvasCtx, cv = this._runner.canvas;
+        var w = cv.width, h = cv.height;
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.globalCompositeOperation = 'color';
-        ctx.fillStyle = this._tint;
-        ctx.fillRect(0, 0, w, h);
-        // …donc on re-découpe avec l'alpha d'origine
-        ctx.globalCompositeOperation = 'destination-in';
-        ctx.drawImage(off, 0, 0);
+        var img = ctx.getImageData(0, 0, w, h), d = img.data;
+        var lr = this._lut[0], lg = this._lut[1], lb = this._lut[2];
+        for (var i = 0; i < d.length; i += 4) {
+          if (d[i + 3] === 0) continue;
+          var lum = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0;
+          d[i] = lr[lum]; d[i + 1] = lg[lum]; d[i + 2] = lb[lum];
+        }
+        ctx.putImageData(img, 0, 0);
         ctx.restore();
       }
 
