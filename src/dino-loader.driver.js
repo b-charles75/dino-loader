@@ -118,6 +118,7 @@
         var rgb = getComputedStyle(probe).color;
         this._tint = rgb || c;
         this._buildLut(this._tint);
+        this._buildTintedSprite();
       }
 
       // Table luminance(0..255) -> couleur. Dégradé ANCRÉ sur l'accent :
@@ -142,23 +143,30 @@
         this._lut = lut;
       }
 
-      // Recolore la frame : chaque pixel mappé via la table selon sa luminance.
-      // L'alpha est conservé tel quel (bords lissés intacts).
-      _applyTint() {
-        if (!this._lut) return;
-        var ctx = this._runner.canvasCtx, cv = this._runner.canvas;
-        var w = cv.width, h = cv.height;
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        var img = ctx.getImageData(0, 0, w, h), d = img.data;
+      // Tinte le sprite UNE fois (chaque pixel mappé via la table selon sa
+      // luminance, alpha conservé) → canvas réutilisé comme source de dessin.
+      _buildTintedSprite() {
+        var R = window.Runner;
+        var src = R && R.imageSprite;
+        if (!this._lut || !src || !src.complete && !src.width) { this._tintedSprite = null; return; }
+        var w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+        if (!w || !h) { this._tintedSprite = null; return; }
+        var cv = this._spriteCv || (this._spriteCv = document.createElement('canvas'));
+        cv.width = w; cv.height = h;
+        var cx = cv.getContext('2d');
+        cx.clearRect(0, 0, w, h);
+        cx.drawImage(src, 0, 0);
+        var img, d;
+        try { img = cx.getImageData(0, 0, w, h); d = img.data; }
+        catch (e) { this._tintedSprite = null; return; }
         var lr = this._lut[0], lg = this._lut[1], lb = this._lut[2];
         for (var i = 0; i < d.length; i += 4) {
           if (d[i + 3] === 0) continue;
           var lum = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0;
           d[i] = lr[lum]; d[i + 1] = lg[lum]; d[i + 2] = lb[lum];
         }
-        ctx.putImageData(img, 0, 0);
-        ctx.restore();
+        cx.putImageData(img, 0, 0);
+        this._tintedSprite = cv;
       }
 
       _build() {
@@ -271,15 +279,20 @@
         this._applySize();
         this._resolveTint();
 
-        // Recolorisation : après chaque frame, on applique la TEINTE de l'accent
-        // en conservant la LUMINANCE de chaque pixel (blend `color`). Le sprite
-        // Chrome a 2 tons (dino #535353 foncé, nuages/lune #DADADA clair) → on
-        // garde ce dégradé, juste habillé de l'accent (dino foncé, nuage clair).
+        // Recolorisation SANS coût par frame : on tinte le sprite UNE fois
+        // (_buildTintedSprite) et on l'échange le temps de chaque update. Tout
+        // dessine alors depuis le sprite teinté — y compris les nuages, qui
+        // mettent le sprite en cache à leur création (ils sont créés pendant
+        // l'update). Aucun traitement pixel par frame → le jeu reste fluide,
+        // donc le pilote de saut garde un timing correct.
         var self = this;
         var origUpdate = inst.update.bind(inst);
         inst.update = function () {
+          if (!self._tintedSprite) { origUpdate(); return; }
+          var saved = Runner.imageSprite;
+          Runner.imageSprite = self._tintedSprite;
           origUpdate();
-          if (self._tint && inst.canvasCtx) self._applyTint();
+          Runner.imageSprite = saved;
         };
 
         // Démarrage : on active la partie et on lance le dino en course.
