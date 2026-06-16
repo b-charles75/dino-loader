@@ -60,8 +60,8 @@ import 'dino-run-loader';      // registers <dino-loader> globally
 For production over a CDN, pin the exact version and add Subresource Integrity:
 
 ```html
-<script src="https://unpkg.com/dino-run-loader@1.0.1/dino-loader.js"
-        integrity="sha384-J9RVV3aNYpe5Yvi7Ng0wVoKMYP+PhZDGnOnrUGYGhFS+PI+/ev0VHIIoDOyQJEgT"
+<script src="https://unpkg.com/dino-run-loader@1.0.2/dino-loader.js"
+        integrity="sha384-/DU5vYaNCVcvYAalxKl4X4+aPL5pv5E9ZPK/aaY5h2N64+4Q/Kh4oy3KnbFOzxVK"
         crossorigin="anonymous"></script>
 ```
 
@@ -108,6 +108,10 @@ also use `<dino-loader …>` directly in JSX.
 | `label` | `label` | — | optional caption under the scene (inherits font) |
 | `color` | `color` | _(gray)_ | recolor the whole scene; any CSS color or `var(--x)` |
 | `dark` | `dark` | — | invert the dino for dark backgrounds |
+
+`height`/`width` set the natural size; the component is **responsive** — it
+scales down to fit a narrower container (keeping its aspect ratio) so it never
+overflows.
 
 ### Theming with your accent color
 

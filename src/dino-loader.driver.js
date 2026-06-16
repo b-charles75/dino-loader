@@ -54,7 +54,7 @@
     css.setAttribute('data-dino-loader', '');
     css.textContent = [
       'dino-loader{display:inline-flex;flex-direction:column;align-items:center;',
-      'gap:.4em;vertical-align:middle;line-height:1;}',
+      'gap:.4em;vertical-align:middle;line-height:1;max-width:100%;}',
       'dino-loader[hidden]{display:none;}',
       'dino-loader .dl-stage{overflow:hidden;position:relative;}',
       'dino-loader .dl-scale{transform-origin:top left;}',
@@ -90,10 +90,26 @@
         if (!this._built) this._build();
         this._applySize();
         this._syncLabel();
+        // Responsive: refit whenever the container's width changes (window
+        // resize, layout reflow, sidebars opening, etc.).
+        var self = this;
+        if (!this._ro && typeof ResizeObserver !== 'undefined' &&
+            this.parentNode && this.parentNode.nodeType === 1) {
+          this._ro = new ResizeObserver(function () { self._applySize(); });
+          this._ro.observe(this.parentNode);
+        }
+        // Fallback for environments where the observer misses a settle: refit on
+        // window resize too.
+        if (!this._onResize) {
+          this._onResize = function () { self._applySize(); };
+          window.addEventListener('resize', this._onResize);
+        }
       }
 
       disconnectedCallback() {
         if (this._raf) cancelAnimationFrame(this._raf);
+        if (this._ro) { this._ro.disconnect(); this._ro = null; }
+        if (this._onResize) { window.removeEventListener('resize', this._onResize); this._onResize = null; }
         if (this._runner && this._runner.stop) {
           try { this._runner.stop(); } catch (e) {}
         }
@@ -188,21 +204,43 @@
         this._boot();
       }
 
+      // Content width available in the parent (padding removed). Infinity when
+      // there is no element parent or it isn't laid out yet (→ use the full size).
+      _availWidth() {
+        var p = this.parentNode;
+        if (!p || p.nodeType !== 1) return Infinity;
+        var w = p.clientWidth;
+        if (!w) return Infinity;
+        var cs;
+        try { cs = getComputedStyle(p); } catch (e) { return w; }
+        var pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+        var avail = w - pad;
+        return avail > 0 ? avail : Infinity;
+      }
+
       _applySize() {
         if (!this._stage) return;
         var h = num(this.getAttribute('height'), 100);
+        // (see _availWidth below for the responsive width clamp)
         // Min 160: below that the track is too short for the auto-pilot to react
         // to an incoming cactus before it reaches the dino (measured).
         var wLogical = Math.min(600, Math.max(160, num(this.getAttribute('width'), 480)));
-        var s = h / NATIVE_H;
         this._wLogical = wLogical;
+        // Display scale from height, then SHRUNK to fit the container width so the
+        // scene never overflows (responsive). The game still runs at wLogical
+        // logical px — only the on-screen scale changes, so gameplay is untouched.
+        var s = h / NATIVE_H;
+        var avail = this._availWidth();
+        if (isFinite(avail) && avail < wLogical * s) {
+          s = Math.max(0, avail / wLogical);
+        }
         this._host.style.width = wLogical + 'px';
         this._host.style.height = NATIVE_H + 'px';
         this._scale.style.width = wLogical + 'px';
         this._scale.style.height = NATIVE_H + 'px';
         this._scale.style.transform = 'scale(' + s + ')';
         this._stage.style.width = (wLogical * s) + 'px';
-        this._stage.style.height = h + 'px';
+        this._stage.style.height = (NATIVE_H * s) + 'px';
         if (this._runner) {
           // force the engine to recompute the canvas width
           try { this._runner.adjustDimensions(); } catch (e) {}
