@@ -11,10 +11,6 @@ the real Chrome **T-Rex Runner** while your app loads — the dino runs and
 not a game).
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/b-charles75/dino-loader/main/assets/demo.gif" alt="The Chrome T-Rex dino running and auto-jumping a cactus as a loading animation" width="480">
-</p>
-
-<p align="center">
   <strong><a href="https://b-charles75.github.io/dino-loader/">▶ Live demo</a></strong>
 </p>
 
