@@ -35,13 +35,13 @@
   ],
   "author": "Charles Boonen",
   "license": "MIT",
-  "homepage": "https://github.com/charlesboonen/dino-run-loader#readme",
+  "homepage": "https://github.com/b-charles75/dino-loader#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/charlesboonen/dino-run-loader.git"
+    "url": "git+https://github.com/b-charles75/dino-loader.git"
   },
   "bugs": {
-    "url": "https://github.com/charlesboonen/dino-run-loader/issues"
+    "url": "https://github.com/b-charles75/dino-loader/issues"
   },
   "sideEffects": [
     "dino-loader.js",
